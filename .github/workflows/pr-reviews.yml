@@ -1,0 +1,45 @@
+name: Auto Assign PR Reviewers
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  assign-reviewers:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Assign reviewers based on PR author
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              const prNumber = context.issue.number;
+              const prAuthor = context.payload.pull_request.user.login;
+              
+              // 作成者ごとのレビューワーマッピング
+              const reviewerMapping = {
+                '0fuzimaru0': ['0fuzimaru0']
+              };
+              
+              // デフォルトレビューワー（マッピングにない場合）
+              const defaultReviewers = ['0fuzimaru0'];
+              
+              const assignedReviewers = reviewerMapping[prAuthor] || defaultReviewers;
+              
+              console.log(`Requesting reviews for PR #${prNumber} from author: ${prAuthor}`);
+              
+              // レビューワー指定のみ
+              await github.rest.pulls.requestReviewers({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+                reviewers: assignedReviewers
+              });
+              
+              console.log(`Successfully requested reviews from: ${assignedReviewers.join(', ')}`);
+            } catch (error) {
+              console.error('Failed to request reviews:', error);
+              throw error;
+            }

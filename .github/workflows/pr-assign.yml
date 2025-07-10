@@ -16,15 +16,14 @@ jobs:
         with:
           script: |
             try {
-              const { owner, repo } = context.repo;
               const prNumber = context.issue.number;
               const prAuthor = context.payload.pull_request.user.login;
               
               console.log(`Assigning PR #${prNumber} to author: ${prAuthor}`);
               
               await github.rest.issues.addAssignees({
-                owner,
-                repo,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
                 issue_number: prNumber,
                 assignees: [prAuthor]
               });
